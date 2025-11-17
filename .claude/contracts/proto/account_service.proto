@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package hkd.account.v1;
+
+option java_package = "com.hkd.account.grpc";
+option java_multiple_files = true;
+option go_package = "github.com/HKDCryptoExchange/hkd-order-gateway/pb/account/v1";
+
+// 账户服务 - 资金操作核心接口
+service AccountService {
+  // 冻结资金（下单、提现时调用）
+  rpc FreezeBalance(FreezeBalanceRequest) returns (FreezeBalanceResponse);
+
+  // 解冻资金（撤单、提现取消时调用）
+  rpc UnfreezeBalance(UnfreezeBalanceRequest) returns (UnfreezeBalanceResponse);
+
+  // 资金转移（清算专用）
+  rpc TransferBalance(TransferBalanceRequest) returns (TransferBalanceResponse);
+
+  // 查询余额
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+
+  // 批量查询余额（settlement批量清算）
+  rpc BatchGetBalance(BatchGetBalanceRequest) returns (BatchGetBalanceResponse);
+
+  // 批量资金转移（settlement批量清算）
+  rpc BatchTransferBalance(BatchTransferBalanceRequest) returns (BatchTransferBalanceResponse);
+}
+
+// ==================== 冻结资金 ====================
+
+message FreezeBalanceRequest {
+  string user_id = 1;
+  string currency = 2;          // BTC, ETH, USDT
+  string amount = 3;             // 金额（字符串避免精度丢失）
+  string business_id = 4;        // 业务ID（订单ID/提现ID）
+  string business_type = 5;      // ORDER, WITHDRAW
+  string idempotent_key = 6;     // 幂等键（防止重复冻结）
+}
+
+message FreezeBalanceResponse {
+  bool success = 1;
+  string message = 2;
+  string freeze_id = 3;          // 冻结记录ID
+  string available_balance = 4;  // 冻结后可用余额
+  string frozen_balance = 5;     // 冻结后冻结余额
+}
+
+// ==================== 解冻资金 ====================
+
+message UnfreezeBalanceRequest {
+  string user_id = 1;
+  string currency = 2;
+  string amount = 3;
+  string business_id = 4;
+  string business_type = 5;
+  string idempotent_key = 6;
+}
+
+message UnfreezeBalanceResponse {
+  bool success = 1;
+  string message = 2;
+  string available_balance = 3;
+  string frozen_balance = 4;
+}
+
+// ==================== 资金转移 ====================
+
+message TransferBalanceRequest {
+  string from_user_id = 1;
+  string to_user_id = 2;
+  string currency = 3;
+  string amount = 4;
+  string transfer_type = 5;      // TRADE_SETTLEMENT, WITHDRAW, DEPOSIT
+  string business_id = 6;        // 业务ID（trade_id/withdraw_id）
+  string idempotent_key = 7;
+}
+
+message TransferBalanceResponse {
+  bool success = 1;
+  string message = 2;
+  string transfer_id = 3;
+}
+
+// ==================== 查询余额 ====================
+
+message GetBalanceRequest {
+  string user_id = 1;
+  string currency = 2;
+}
+
+message GetBalanceResponse {
+  string user_id = 1;
+  string currency = 2;
+  string available_balance = 3;  // 可用余额
+  string frozen_balance = 4;     // 冻结余额
+  string total_balance = 5;      // 总余额
+}
+
+// ==================== 批量查询余额 ====================
+
+message BatchGetBalanceRequest {
+  repeated string user_ids = 1;
+  string currency = 2;
+}
+
+message BatchGetBalanceResponse {
+  repeated GetBalanceResponse balances = 1;
+}
+
+// ==================== 批量资金转移 ====================
+
+message BatchTransferBalanceRequest {
+  repeated TransferBalanceRequest transfers = 1;
+}
+
+message BatchTransferBalanceResponse {
+  bool success = 1;
+  int32 success_count = 2;
+  int32 failed_count = 3;
+  repeated TransferResult results = 4;
+}
+
+message TransferResult {
+  string business_id = 1;
+  bool success = 2;
+  string message = 3;
+}

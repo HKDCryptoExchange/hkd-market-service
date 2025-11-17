@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NotificationRequestEvent",
+  "description": "通知请求事件 - 各服务 → notification-service",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "timestamp",
+    "source_service",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": ["NOTIFICATION_REQUEST"]
+    },
+    "event_version": {
+      "type": "string",
+      "enum": ["v1"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_service": {
+      "type": "string",
+      "description": "来源服务（kyc-service, withdraw-service等）"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "user_id",
+        "notification_type",
+        "template_code",
+        "language"
+      ],
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "notification_type": {
+          "type": "string",
+          "enum": ["EMAIL", "SMS", "IN_APP", "PUSH"],
+          "description": "通知类型"
+        },
+        "template_code": {
+          "type": "string",
+          "description": "模板代码（如KYC_APPROVED, WITHDRAW_COMPLETED）"
+        },
+        "language": {
+          "type": "string",
+          "enum": ["zh_CN", "en_US"],
+          "description": "语言"
+        },
+        "variables": {
+          "type": "object",
+          "description": "模板变量",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["HIGH", "NORMAL", "LOW"],
+          "default": "NORMAL",
+          "description": "优先级"
+        },
+        "recipient": {
+          "type": "object",
+          "description": "收件人信息（可选，覆盖user_id查询的信息）",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "phone": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

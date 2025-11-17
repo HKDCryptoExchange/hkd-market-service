@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TradeExecutedEvent",
+  "description": "撮合引擎成交事件 - matching-engine → settlement-service",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "timestamp",
+    "source_service",
+    "correlation_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "事件唯一ID"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": ["TRADE_EXECUTED"],
+      "description": "事件类型"
+    },
+    "event_version": {
+      "type": "string",
+      "enum": ["v1"],
+      "description": "事件版本"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "事件时间 ISO8601"
+    },
+    "source_service": {
+      "type": "string",
+      "enum": ["matching-engine"],
+      "description": "来源服务"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "关联ID（追踪整个业务流程）"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "trade_id",
+        "symbol",
+        "price",
+        "quantity",
+        "buyer_order_id",
+        "seller_order_id",
+        "buyer_user_id",
+        "seller_user_id",
+        "buyer_fee",
+        "seller_fee",
+        "maker_side",
+        "timestamp"
+      ],
+      "properties": {
+        "trade_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "成交ID"
+        },
+        "symbol": {
+          "type": "string",
+          "pattern": "^[A-Z]+/[A-Z]+$",
+          "description": "交易对（如BTC/USDT）"
+        },
+        "price": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d{2,8}$",
+          "description": "成交价格（字符串，避免精度丢失）"
+        },
+        "quantity": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d{2,8}$",
+          "description": "成交数量"
+        },
+        "buyer_order_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "买单ID"
+        },
+        "seller_order_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "卖单ID"
+        },
+        "buyer_user_id": {
+          "type": "string",
+          "description": "买方用户ID"
+        },
+        "seller_user_id": {
+          "type": "string",
+          "description": "卖方用户ID"
+        },
+        "buyer_fee": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d{2,8}$",
+          "description": "买方手续费（基础币种，如BTC）"
+        },
+        "seller_fee": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d{2,8}$",
+          "description": "卖方手续费（报价币种，如USDT）"
+        },
+        "maker_side": {
+          "type": "string",
+          "enum": ["BUY", "SELL"],
+          "description": "Maker方向（决定手续费折扣）"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "成交时间（毫秒精度）"
+        }
+      }
+    }
+  }
+}

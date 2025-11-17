@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package hkd.risk.v1;
+
+option java_package = "com.hkd.risk.grpc";
+option java_multiple_files = true;
+option go_package = "github.com/HKDCryptoExchange/hkd-order-gateway/pb/risk/v1";
+
+// 风控服务 - 风险检查和异常检测
+service RiskService {
+  // 订单风控检查（order-gateway调用）
+  rpc CheckOrderRisk(CheckOrderRiskRequest) returns (CheckOrderRiskResponse);
+
+  // 提现风控检查（withdraw-service调用）
+  rpc CheckWithdrawRisk(CheckWithdrawRiskRequest) returns (CheckWithdrawRiskResponse);
+
+  // 用户行为异常检测（调用ML服务）
+  rpc DetectAnomalyBehavior(DetectAnomalyRequest) returns (DetectAnomalyResponse);
+}
+
+// ==================== 订单风控 ====================
+
+message CheckOrderRiskRequest {
+  string user_id = 1;
+  string symbol = 2;
+  string side = 3;           // BUY, SELL
+  string order_type = 4;     // LIMIT, MARKET
+  string price = 5;
+  string quantity = 6;
+}
+
+message CheckOrderRiskResponse {
+  bool allowed = 1;
+  string risk_level = 2;     // LOW, MEDIUM, HIGH, CRITICAL
+  string reason = 3;
+  repeated string warnings = 4;
+}
+
+// ==================== 提现风控 ====================
+
+message CheckWithdrawRiskRequest {
+  string user_id = 1;
+  string currency = 2;
+  string amount = 3;
+  string address = 4;
+  string network = 5;
+}
+
+message CheckWithdrawRiskResponse {
+  bool allowed = 1;
+  bool need_manual_review = 2;
+  string risk_level = 3;
+  string reason = 4;
+}
+
+// ==================== 异常检测 ====================
+
+message DetectAnomalyRequest {
+  string user_id = 1;
+  string behavior_type = 2;  // LOGIN, TRADE, WITHDRAW
+  map<string, string> features = 3;  // 行为特征
+}
+
+message DetectAnomalyResponse {
+  bool is_anomaly = 1;
+  double anomaly_score = 2;  // 0.0-1.0
+  string description = 3;
+}

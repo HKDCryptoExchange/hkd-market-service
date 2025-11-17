@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package hkd.wallet.v1;
+
+option java_package = "com.hkd.wallet.grpc";
+option java_multiple_files = true;
+option go_package = "github.com/HKDCryptoExchange/hkd-order-gateway/pb/wallet/v1";
+
+// 钱包服务 - 区块链地址和交易管理
+service WalletService {
+  // 分配充值地址（deposit-service调用）
+  rpc AssignDepositAddress(AssignDepositAddressRequest) returns (AssignDepositAddressResponse);
+
+  // 签名交易（withdraw-service调用）
+  rpc SignTransaction(SignTransactionRequest) returns (SignTransactionResponse);
+
+  // 广播交易（withdraw-service调用）
+  rpc BroadcastTransaction(BroadcastTransactionRequest) returns (BroadcastTransactionResponse);
+
+  // 查询地址余额（对账使用）
+  rpc GetAddressBalance(GetAddressBalanceRequest) returns (GetAddressBalanceResponse);
+}
+
+// ==================== 分配充值地址 ====================
+
+message AssignDepositAddressRequest {
+  string user_id = 1;
+  string currency = 2;
+  string network = 3;  // ERC20, BEP20, TRC20, MAINNET
+}
+
+message AssignDepositAddressResponse {
+  bool success = 1;
+  string address = 2;
+  string tag = 3;      // 某些币种需要tag（如XRP、XLM）
+  string message = 4;
+}
+
+// ==================== 签名交易 ====================
+
+message SignTransactionRequest {
+  string currency = 1;
+  string network = 2;
+  string to_address = 3;
+  string amount = 4;
+  string withdraw_id = 5;
+  string gas_price = 6;  // 可选，指定Gas价格
+}
+
+message SignTransactionResponse {
+  bool success = 1;
+  string signed_tx = 2;  // 签名后的交易数据（十六进制）
+  string tx_hash = 3;
+  string message = 4;
+}
+
+// ==================== 广播交易 ====================
+
+message BroadcastTransactionRequest {
+  string currency = 1;
+  string network = 2;
+  string signed_tx = 3;
+}
+
+message BroadcastTransactionResponse {
+  bool success = 1;
+  string tx_hash = 2;
+  string message = 3;
+}
+
+// ==================== 查询地址余额 ====================
+
+message GetAddressBalanceRequest {
+  string currency = 1;
+  string network = 2;
+  string address = 3;
+}
+
+message GetAddressBalanceResponse {
+  bool success = 1;
+  string address = 1;
+  string balance = 2;
+  string message = 3;
+}

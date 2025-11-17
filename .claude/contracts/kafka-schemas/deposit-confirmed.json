@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DepositConfirmedEvent",
+  "description": "充值确认事件 - deposit-service → account-service",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "timestamp",
+    "source_service",
+    "correlation_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": ["DEPOSIT_CONFIRMED"]
+    },
+    "event_version": {
+      "type": "string",
+      "enum": ["v1"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_service": {
+      "type": "string",
+      "enum": ["deposit-service"]
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "deposit_id",
+        "user_id",
+        "currency",
+        "network",
+        "amount",
+        "tx_hash",
+        "confirmations"
+      ],
+      "properties": {
+        "deposit_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string",
+          "description": "币种（BTC, ETH, USDT）"
+        },
+        "network": {
+          "type": "string",
+          "enum": ["MAINNET", "ERC20", "BEP20", "TRC20"],
+          "description": "网络类型"
+        },
+        "amount": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d{2,8}$"
+        },
+        "tx_hash": {
+          "type": "string",
+          "description": "交易哈希"
+        },
+        "confirmations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "确认数"
+        },
+        "from_address": {
+          "type": "string",
+          "description": "发送地址"
+        },
+        "to_address": {
+          "type": "string",
+          "description": "接收地址（平台地址）"
+        },
+        "block_height": {
+          "type": "integer",
+          "description": "区块高度"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,159 @@
+spring:
+  application:
+    name: market-service
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:hkd_market}
+    username: ${DB_USERNAME:hkd_admin}
+    password: ${DB_PASSWORD:hkd_dev_password_2024}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: MarketServiceHikariPool
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:hkd_redis_2024}
+      database: ${REDIS_DB:0}
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+          max-wait: -1ms
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: market-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    listener:
+      concurrency: 3
+      ack-mode: manual
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    encoding: UTF-8
+    table: flyway_schema_history
+
+server:
+  port: ${SERVER_PORT:8010}
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:mapper/**/*.xml
+
+# HKD Market Service 特定配置
+hkd:
+  market:
+    # WebSocket配置
+    websocket:
+      enabled: true
+      port: ${WEBSOCKET_PORT:8010}
+      path: /ws/market
+      max-connections: 100000
+      heartbeat-interval: 30000  # 心跳间隔 (ms)
+      max-frame-size: 65536      # 最大帧大小 (bytes)
+      boss-threads: 1
+      worker-threads: ${WEBSOCKET_WORKER_THREADS:8}
+
+    # K线配置
+    kline:
+      intervals: 1m,5m,15m,30m,1h,4h,1d,1w,1M
+      cache-ttl: 60              # Redis缓存TTL (秒)
+      max-query-limit: 1500      # 最大查询K线数量
+
+    # 深度数据配置
+    depth:
+      levels: 10,20,50           # 支持的深度档位
+      cache-ttl: 1               # Redis缓存TTL (秒)
+      push-interval: 100         # WebSocket推送间隔 (ms)
+
+    # Ticker配置
+    ticker:
+      push-interval: 1000        # WebSocket推送间隔 (ms)
+      cache-ttl: 1               # Redis缓存TTL (秒)
+
+    # 成交记录配置
+    trade:
+      cache-size: 1000           # Redis缓存最近N笔成交
+      partition-months: 1        # 按月分表
+
+    # 24h统计配置
+    stats:
+      window-hours: 24
+      update-interval: 60000     # 更新间隔 (ms)
+      cache-ttl: 60              # Redis缓存TTL (秒)
+
+    # Kafka Topic配置
+    kafka:
+      trade-topic: trade.executed
+      partition-count: 3
+
+    # Matching Engine 集成
+    matching-engine:
+      websocket-url: ${MATCHING_ENGINE_WS_URL:ws://localhost:8005/ws/matching}
+      reconnect-interval: 5000   # 重连间隔 (ms)
+      max-reconnect-attempts: 10
+
+  worker-id: ${WORKER_ID:0}
+
+logging:
+  level:
+    root: INFO
+    com.hkd: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+    io.netty: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/market-service.log
+    max-size: 100MB
+    max-history: 30
